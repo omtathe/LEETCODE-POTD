@@ -1,0 +1,49 @@
+class Solution {
+    countSubs(s) {
+        // Suffix Automaton Arrays
+        let saNext = Array.from({ length: 6005 }, () => Array(26).fill(-1));
+        let saLink = Array(6005).fill(-1);
+        let saLen = Array(6005).fill(0);
+
+        let last = 0, sz = 1;
+        
+        const addChar = (c) => {
+            let cur = sz++, p = last;
+            let cIdx = c.charCodeAt(0) - 97;
+            saLen[cur] = saLen[last] + 1;
+
+            while (p !== -1 && saNext[p][cIdx] === -1) {
+                saNext[p][cIdx] = cur;
+                p = saLink[p];
+            }
+
+            if (p === -1) {
+                saLink[cur] = 0;
+            } else {
+                let q = saNext[p][cIdx];
+                if (saLen[p] + 1 === saLen[q]) {
+                    saLink[cur] = q;
+                } else {
+                    let clone = sz++;
+                    saLen[clone] = saLen[p] + 1;
+                    saNext[clone] = [...saNext[q]];
+                    saLink[clone] = saLink[q];
+                    while (p !== -1 && saNext[p][cIdx] === q) {
+                        saNext[p][cIdx] = clone;
+                        p = saLink[p];
+                    }
+                    saLink[q] = saLink[cur] = clone;
+                }
+            }
+            last = cur;
+        };
+
+        for (let ch of s) addChar(ch);
+
+        let result = 0;
+        for (let i = 1; i < sz; i++)
+            result += saLen[i] - saLen[saLink[i]];
+
+        return result;
+    }
+}
